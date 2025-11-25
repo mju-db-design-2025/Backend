@@ -18,7 +18,7 @@ public class RecommendedDeveloperResponse {
     private Integer jobCode;
     private String jobName;
     private BigDecimal fitScore;
-    private String recommendReason;
+    private List<String> recommendReasons;
     private List<String> skills;
     private Integer careerYears;
     private String techGrade;

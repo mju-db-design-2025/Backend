@@ -75,7 +75,6 @@ public class DeveloperRecommendationService {
                 Integer bestJobCode = null;
                 String bestJobName = "";
                 BigDecimal bestFitScore = BigDecimal.ZERO;
-                String bestReason = "";
 
                 for (Job job : targetJobs) {
                     // 해당 직무에서의 평가 점수 조회
@@ -92,7 +91,6 @@ public class DeveloperRecommendationService {
                         bestFitScore = fitScore;
                         bestJobCode = job.getJobCode();
                         bestJobName = job.getJobName();
-                        bestReason = generateRecommendReason(developer, skills, fitScore, evaluationScore, job.getJobName());
                     }
                 }
                 
@@ -109,8 +107,9 @@ public class DeveloperRecommendationService {
                     bestFitScore = baseScore.multiply(BigDecimal.valueOf(0.6))
                             .add(skillScore.multiply(BigDecimal.valueOf(0.4)))
                             .setScale(2, RoundingMode.HALF_UP);
-                    bestReason = generateRecommendReason(developer, skills, bestFitScore, BigDecimal.ZERO, bestJobName);
                 }
+
+                List<String> recommendReasons = getEvaluationDetailsForJob(developer.getEmployeeId(), bestJobCode);
 
                 RecommendedDeveloperResponse response = RecommendedDeveloperResponse.builder()
                         .employeeId(developer.getEmployeeId())
@@ -118,7 +117,7 @@ public class DeveloperRecommendationService {
                         .jobCode(bestJobCode)
                         .jobName(bestJobName)
                         .fitScore(bestFitScore)
-                        .recommendReason(bestReason)
+                        .recommendReasons(recommendReasons)
                         .skills(skills)
                         .careerYears(developer.getCareerYears())
                         .techGrade(developer.getTechGrade())
@@ -152,7 +151,7 @@ public class DeveloperRecommendationService {
                         recommendation.getEmployeeId(),
                         recommendation.getJobCode(),
                         recommendation.getFitScore(),
-                        recommendation.getRecommendReason()
+                        recommendation.getRecommendReasons()
                     );
                 }
             } else {
@@ -236,17 +235,6 @@ public class DeveloperRecommendationService {
         return score.max(BigDecimal.valueOf(baseSkillScore));
     }
 
-    /**
-     * 개발자가 보유한 기술 코드 목록 조회
-     */
-    private List<Integer> getDeveloperTechCodes(Integer employeeId) {
-        List<DeveloperSkill> developerSkills = developerSkillRepository.findByEmployeeId(employeeId);
-        return developerSkills.stream()
-                .map(ds -> ds.getTechnology() != null ? ds.getTechnology().getTechCode() : null)
-                .filter(code -> code != null)
-                .collect(Collectors.toList());
-    }
-
     private List<String> getDeveloperSkills(Integer employeeId) {
         List<DeveloperSkill> developerSkills = developerSkillRepository.findByEmployeeId(employeeId);
         return developerSkills.stream()
@@ -276,35 +264,72 @@ public class DeveloperRecommendationService {
         }
     }
 
-    private String generateRecommendReason(Developer developer, List<String> skills, BigDecimal fitScore, 
-                                          BigDecimal evaluationScore, String jobName) {
-        StringBuilder reason = new StringBuilder();
-        
-        if (jobName != null && !jobName.isEmpty()) {
-            reason.append(String.format("%s 직무에서 ", jobName));
+    private List<String> getEvaluationDetailsForJob(Integer employeeId, Integer jobCode) {
+        try {
+            List<ProjectParticipation> participations = projectParticipationRepository.findByEmployeeId(employeeId);
+            List<Integer> projectIds = participations.stream()
+                    .filter(pp -> pp.getJobCode() != null && pp.getJobCode().equals(jobCode))
+                    .map(pp -> pp.getId().getProjectId())
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            if (projectIds.isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            List<Evaluation> evaluations = evaluationRepository.findByProjectIds(projectIds);
+            List<Integer> evaluationIds = evaluations.stream()
+                    .map(Evaluation::getEvaluationId)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            if (evaluationIds.isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            List<SemiEvaluation> semiEvaluations = semiEvaluationRepository.findByEvaluationIds(evaluationIds);
+            return semiEvaluations.stream()
+                    .map(this::formatEvaluationDetail)
+                    .filter(detail -> detail != null && !detail.isBlank())
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.warn("Error getting evaluation details for employeeId: {}, jobCode: {}", employeeId, jobCode, e);
+            return new ArrayList<>();
         }
-        
-        if (developer.getCareerYears() != null) {
-            reason.append(String.format("경력 %d년, ", developer.getCareerYears()));
+    }
+
+    private String formatEvaluationDetail(SemiEvaluation semiEvaluation) {
+        StringBuilder detail = new StringBuilder();
+
+        String itemName = semiEvaluation.getEvaluationItem() != null
+                ? semiEvaluation.getEvaluationItem().getItemName()
+                : null;
+        if (itemName != null && !itemName.isBlank()) {
+            detail.append(itemName.trim());
         }
-        
-        if (developer.getTechGrade() != null) {
-            reason.append(String.format("기술등급 %s, ", developer.getTechGrade()));
+
+        BigDecimal score = semiEvaluation.getScore();
+        if (score != null) {
+            String scoreText = score.setScale(1, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
+            if (detail.length() > 0) {
+                detail.append(" ");
+            }
+            detail.append("(").append(scoreText).append("점)");
         }
-        
-        if (evaluationScore.compareTo(BigDecimal.valueOf(50)) > 0) {
-            reason.append(String.format("과거 평가 평균 %.1f점, ", evaluationScore));
+
+        String evaluationText = semiEvaluation.getEvaluationText();
+        if (evaluationText != null && !evaluationText.isBlank()) {
+            if (detail.length() > 0) {
+                detail.append(" - ");
+            }
+            detail.append(evaluationText.trim());
         }
-        
-        if (!skills.isEmpty()) {
-            reason.append(String.format("보유기술: %s", String.join(", ", skills)));
-        }
-        
-        return reason.toString();
+
+        return detail.toString();
     }
 
     private void saveRecommendation(Integer projectId, Integer employeeId, Integer jobCode, 
-                                   BigDecimal fitScore, String reason) {
+                                   BigDecimal fitScore, List<String> reasons) {
         try {
             // 프로젝트에 대한 평가 조회 (이미 호출 전에 확인했지만, 안전을 위해 다시 확인)
             List<Evaluation> evaluations = evaluationRepository.findByProjectId(projectId);
@@ -323,7 +348,10 @@ public class DeveloperRecommendationService {
             recommendation.setJobCode(jobCode);
             recommendation.setEvaluationId(evaluationId);
             recommendation.setFitScore(fitScore);
-            recommendation.setRecommendReason(reason);
+            String reasonText = (reasons == null || reasons.isEmpty())
+                    ? ""
+                    : String.join(" | ", reasons);
+            recommendation.setRecommendReason(reasonText);
             recommendation.setRecommendDatetime(LocalDateTime.now());
 
             developerRecommendationRepository.save(recommendation);

@@ -13,5 +13,8 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Integer>
 
     @Query("SELECT e FROM Evaluation e WHERE e.projectId = :projectId")
     List<Evaluation> findByProjectId(@Param("projectId") Integer projectId);
+
+    @Query("SELECT e FROM Evaluation e WHERE e.projectId IN :projectIds")
+    List<Evaluation> findByProjectIds(@Param("projectIds") List<Integer> projectIds);
 }
 
