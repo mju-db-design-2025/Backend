@@ -8,7 +8,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "SEMI_EVALUATION")
+@Table(name = "semi_evaluation")
 @Getter
 @Setter
 @NoArgsConstructor

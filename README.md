@@ -48,7 +48,7 @@ src/main/java/com/mju/db_project/
 ```sql
 CREATE DATABASE project_db;
 ```
-
+     
 2. `src/main/resources/application-secret.yml` 파일 생성:
 ```yaml
 spring:
