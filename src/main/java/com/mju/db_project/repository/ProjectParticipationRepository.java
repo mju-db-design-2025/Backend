@@ -17,5 +17,16 @@ public interface ProjectParticipationRepository extends JpaRepository<ProjectPar
 
     @Query("SELECT DISTINCT pp.jobCode FROM ProjectParticipation pp WHERE pp.id.employeeId = :employeeId")
     List<Integer> findDistinctJobCodesByEmployeeId(@Param("employeeId") Integer employeeId);
+
+
+    // ===== S3 =====
+    @Query("SELECT pp FROM ProjectParticipation pp " +
+            "JOIN FETCH pp.employee e " +
+            "JOIN FETCH pp.job j " +
+            "WHERE pp.project.projectId = :projectId")
+    List<ProjectParticipation> findByProjectId(@Param("projectId") Integer projectId); 
+
+    @Query("SELECT COUNT(pp) FROM ProjectParticipation pp WHERE pp.project.projectId = :projectId")
+    int countByProjectId(@Param("projectId") Integer projectId);
 }
 
