@@ -277,7 +277,7 @@ public class DeveloperRecommendationService {
                 return new ArrayList<>();
             }
 
-            List<Evaluation> evaluations = evaluationRepository.findByProjectIds(projectIds);
+            List<Evaluation> evaluations = evaluationRepository.findMyEvaluationsInProjects(projectIds, employeeId);
             List<Integer> evaluationIds = evaluations.stream()
                     .map(Evaluation::getEvaluationId)
                     .distinct()
