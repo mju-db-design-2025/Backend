@@ -28,5 +28,9 @@ public interface ProjectParticipationRepository extends JpaRepository<ProjectPar
 
     @Query("SELECT COUNT(pp) FROM ProjectParticipation pp WHERE pp.project.projectId = :projectId")
     int countByProjectId(@Param("projectId") Integer projectId);
+
+    // ===총 투입인력 (중복제거)
+    @Query("SELECT COUNT(DISTINCT pp.id.employeeId) FROM ProjectParticipation pp")
+    long countDistinctDevelopers();
 }
 
