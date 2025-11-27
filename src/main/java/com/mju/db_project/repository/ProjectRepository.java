@@ -25,6 +25,13 @@ public interface ProjectRepository extends JpaRepository<Project, Integer> {
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate
     );
+
+    long count();
+    @Query("SELECT COUNT(p) FROM Project p WHERE p.endDate < :now")
+    long countDoneProjects(@Param("now") LocalDate now);
+
+    @Query("SELECT COUNT(p) FROM Project p WHERE p.endDate >= :now OR p.endDate IS NULL")
+    long countIngProjects(@Param("now") LocalDate now);
     
 }
 

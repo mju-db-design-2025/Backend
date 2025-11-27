@@ -3,6 +3,7 @@ package com.mju.db_project.controller;
 import com.mju.db_project.dto.request.ProjectCreateRequest;
 import com.mju.db_project.dto.request.ProjectSearchRequest;
 import com.mju.db_project.dto.response.ProjectCreateResponse;
+import com.mju.db_project.dto.response.ProjectDashboard;
 import com.mju.db_project.dto.response.ProjectDetail;
 import com.mju.db_project.dto.response.ProjectSummary;
 import com.mju.db_project.service.ProjectService;
@@ -53,6 +54,14 @@ public class ProjectController {
                 description = "특정 프로젝트 상세 정보와 투입 인력 정보 조회합니다.")
     public ResponseEntity<ProjectDetail> getProjectDetail(@PathVariable Integer projectId) {
         ProjectDetail response = projectService.getProjectDetail(projectId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/dashboard")
+    @Operation(summary = "프로젝트 통계 및 총 인력 조회",
+                description = "진행중(%), 완료(%) 및 중복 제거된 총 투입 인력 수를 반환합니다.")
+    public ResponseEntity<ProjectDashboard> getDashboardAnalytics(){
+        ProjectDashboard response = projectService.getDashboardAnalytics();
         return ResponseEntity.ok(response);
     }
 }

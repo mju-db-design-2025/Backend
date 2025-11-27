@@ -7,6 +7,7 @@ import com.mju.db_project.domain.Technology;
 import com.mju.db_project.dto.request.ProjectCreateRequest;
 import com.mju.db_project.dto.request.ProjectSearchRequest;
 import com.mju.db_project.dto.response.ProjectCreateResponse;
+import com.mju.db_project.dto.response.ProjectDashboard;
 import com.mju.db_project.dto.response.ProjectDetail;
 import com.mju.db_project.dto.response.ProjectSummary;
 import com.mju.db_project.dto.response.RecommendedDeveloperResponse;
@@ -193,6 +194,35 @@ public class ProjectService {
                 .endDate(project.getEndDate())
                 .totalPeople(members.size())
                 .members(members)
+                .build();
+    }
+
+    // 대시보드 원형 그래프용
+    @Transactional(readOnly = true)
+    public ProjectDashboard getDashboardAnalytics(){
+        LocalDate now = LocalDate.now();
+
+        //DB에서 카운트 조회
+        long totalProjects = projectRepository.count();
+        long doneCount = projectRepository.countDoneProjects(now);
+        long ingCount = projectRepository.countIngProjects(now);
+
+        // 개발자 수 (중복 x)
+        long totalDevelopers = participationRepository.countDistinctDevelopers();
+
+        double donePercent = 0.0;
+        double ingPercent = 0.0;
+
+        if (totalProjects > 0){
+            donePercent = Math.round((doneCount / (double) totalProjects) * 1000) / 10.0;
+            ingPercent = Math.round((ingCount / (double) totalProjects) * 1000) / 10.0;
+        }
+
+        return ProjectDashboard.builder()
+                .totalProjects(totalProjects)
+                .ingProjectPercent(ingPercent)
+                .doneProjectPercent(donePercent)
+                .totalDevelopers(totalDevelopers)
                 .build();
     }
 
