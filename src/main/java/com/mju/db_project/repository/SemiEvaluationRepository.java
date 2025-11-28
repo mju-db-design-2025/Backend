@@ -21,6 +21,9 @@ public interface SemiEvaluationRepository extends JpaRepository<SemiEvaluation, 
     @Query("SELECT se FROM SemiEvaluation se WHERE se.id.evaluationId = :evaluationId")
     List<SemiEvaluation> findByEvaluationId(@Param("evaluationId") Integer evaluationId);
 
+    // 상세 조회 로직에서 사용되는 메서드
+    List<SemiEvaluation> findAllByEvaluationId(@Param("evaluationId") Integer evaluationId);
+
     @Query("SELECT se FROM SemiEvaluation se WHERE se.id.evaluationId IN :evaluationIds")
     List<SemiEvaluation> findByEvaluationIds(@Param("evaluationIds") List<Integer> evaluationIds);
 }
