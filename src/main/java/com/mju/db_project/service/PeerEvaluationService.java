@@ -1,15 +1,14 @@
 package com.mju.db_project.service;
 
 import com.mju.db_project.domain.*;
-import com.mju.db_project.dto.request.EvaluationRequestDto; // ⭐️ 경로 수정
-import com.mju.db_project.dto.response.EvaluationResponseDto; // ⭐️ 경로 수정
-import com.mju.db_project.dto.response.PeerEvaluationListDto; // ⭐️ 경로 수정
+import com.mju.db_project.dto.request.EvaluationRequestDto;
+import com.mju.db_project.dto.response.EvaluationResponseDto;
+import com.mju.db_project.dto.response.PeerEvaluationListDto;
 import com.mju.db_project.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,7 +20,6 @@ public class PeerEvaluationService {
     private final EvaluationRepository evaluationRepository;
     private final PeerEvaluationRepository peerEvaluationRepository;
     private final SemiEvaluationRepository semiEvaluationRepository;
-    private final ProjectRepository projectRepository;
 
     /**
      * 1. 동료평가 목록 조회 (작성자 ID 기반)
@@ -41,7 +39,7 @@ public class PeerEvaluationService {
                     .projectName(projectName)
                     .targetEmpName(targetEmp.getEmployeeName())
                     .evaluationType(eval.getEvaluationType())
-                    .submissionDate(LocalDateTime.of(2024, 11, 28, 10, 0))
+                    .submissionDate(eval.getSubmissionDate()) // Evaluation 엔티티에서 @PrePersist로 자동 저장된 제출일 사용
                     .build();
         }).collect(Collectors.toList());
     }
@@ -77,7 +75,7 @@ public class PeerEvaluationService {
             .targetEmpName(targetName)
             .evaluatorName(evaluatorName)
             .evaluationType(eval.getEvaluationType())
-            .submissionDate(LocalDateTime.of(2024, 11, 28, 10, 0))
+            .submissionDate(eval.getSubmissionDate()) // Evaluation 엔티티에서 @PrePersist로 자동 저장된 제출일 사용
             .details(detailDtos)
             .build();
     }
