@@ -58,7 +58,7 @@ public class PeerEvaluationService {
         String targetName = peerEval.getEvaluated().getEmployeeName();
         String evaluatorName = peerEval.getEvaluator().getEmployeeName();
 
-        List<SemiEvaluation> semiDetails = semiEvaluationRepository.findAllByEvaluationId(evaluationId);
+        List<SemiEvaluation> semiDetails = semiEvaluationRepository.findByEvaluationId(evaluationId);
 
         List<EvaluationResponseDto.DetailResponseDto> detailDtos = semiDetails.stream()
             .map(d -> EvaluationResponseDto.DetailResponseDto.builder()
