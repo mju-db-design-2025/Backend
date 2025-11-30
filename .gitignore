@@ -38,3 +38,6 @@ out/
 
 ### Spring Secret ###
 application-secret.yml
+
+### DB pw ###
+/src/main/resources/application-secret.yml
