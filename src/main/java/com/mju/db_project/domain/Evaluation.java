@@ -1,5 +1,7 @@
 package com.mju.db_project.domain;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,4 +27,16 @@ public class Evaluation {
     @ManyToOne
     @JoinColumn(name = "project_id", insertable = false, updatable = false)
     private Project project;
+
+    @Column(name = "submission_date") // DB 컬럼과 매핑
+    private LocalDateTime submissionDate; // 제출일을 저장할 필드
+
+    @PrePersist
+    public void prePersist() {
+        // 엔티티가 DB에 처음 저장되기 직전에 현재 시간을 설정합니다.
+        // 이 로직은 서비스나 컨트롤러에서 시간을 설정할 필요가 없게 만듭니다.
+        if (this.submissionDate == null) { // 필드가 null일 때만 현재 시간 설정(수정 시점엔 동작X)
+            this.submissionDate = LocalDateTime.now();
+        }
+    }
 }
