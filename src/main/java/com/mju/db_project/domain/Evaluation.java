@@ -15,8 +15,6 @@ import lombok.Setter;
 public class Evaluation {
 
     @Id
-    // DB에 ID 생성을 위임하고, 생성된 ID를 객체에 받아오도록 설정합니다.
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "evaluation_id")
     private Integer evaluationId;
 

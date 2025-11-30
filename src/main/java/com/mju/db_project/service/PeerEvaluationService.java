@@ -85,28 +85,35 @@ public class PeerEvaluationService {
      */
     @Transactional
     public Integer createEvaluation(Integer evaluatorId, EvaluationRequestDto dto) {
-        Evaluation newEval = new Evaluation();
-        newEval.setProjectId(dto.getProjectId());
-        newEval.setEvaluationType("동료"); 
-        newEval = evaluationRepository.save(newEval);
-        
-        Integer newEvaluationId = newEval.getEvaluationId();
 
+        // 1) 다음 evaluation_id 생성
+        int nextId = evaluationRepository.findMaxId() + 1;
+
+        // 2) Evaluation 생성
+        Evaluation newEval = new Evaluation();
+        newEval.setEvaluationId(nextId);   // ★★★ 수동 ID 주입
+        newEval.setProjectId(dto.getProjectId());
+        newEval.setEvaluationType("동료");
+
+        evaluationRepository.save(newEval);
+
+        // 3) PeerEvaluation 생성
         PeerEvaluation newPeerEval = new PeerEvaluation();
-        newPeerEval.setEvaluationId(newEvaluationId);
+        newPeerEval.setEvaluationId(nextId);
         newPeerEval.setEvaluatorId(evaluatorId);
         newPeerEval.setEvaluatedId(dto.getTargetEmpId());
-        newPeerEval.setEvaluationType("동료"); 
+        newPeerEval.setEvaluationType("동료");
         peerEvaluationRepository.save(newPeerEval);
 
+        // 4) SemiEvaluation 생성
         for (EvaluationRequestDto.DetailRequestDto detailDto : dto.getDetails()) {
             SemiEvaluation semi = new SemiEvaluation();
-            semi.setId(new SemiEvaluationId(newEvaluationId, detailDto.getItemId()));
+            semi.setId(new SemiEvaluationId(nextId, detailDto.getItemId()));
             semi.setScore(detailDto.getScore());
             semi.setEvaluationText(detailDto.getNarrative());
             semiEvaluationRepository.save(semi);
         }
 
-        return newEvaluationId;
+        return nextId;
     }
 }

@@ -33,5 +33,9 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Integer>
         @Param("projectIds") List<Integer> projectIds, 
         @Param("employeeId") Integer employeeId
     );
+
+    /** 수동 ID 생성을 위한 max ID 조회 */
+    @Query("SELECT COALESCE(MAX(e.evaluationId), 0) FROM Evaluation e")
+    int findMaxId();
 }
 
