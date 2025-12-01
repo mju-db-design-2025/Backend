@@ -186,10 +186,10 @@ public class DeveloperRecommendationService {
     private int getGradeScore(String techGrade) {
         if (techGrade == null) return 0;
         return switch (techGrade.toUpperCase()) {
-            case "S", "시니어" -> 50;
-            case "A", "시니어+" -> 45;
-            case "B", "미들" -> 35;
-            case "C", "주니어+" -> 25;
+            case "S", "시니어", "특급" -> 50;
+            case "A", "시니어+", "고급" -> 45;
+            case "B", "미들", "중급" -> 35;
+            case "C", "주니어+", "초급" -> 25;
             case "D", "주니어" -> 15;
             default -> 10;
         };
